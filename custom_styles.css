@@ -1,0 +1,48 @@
+/* Ensure Prism's background doesn't override ADO's diff colors */
+pre[class*="language-"],
+code[class*="language-"] {
+    background: none !important; /* Or transparent */
+    text-shadow: none !important; /* Some themes add this */
+}
+
+/*
+  Azure DevOps uses classes like:
+  .repos-line-content.added
+  .repos-line-content.removed
+  .repos-line-content.unchanged
+
+  Prism will wrap tokens in spans like <span class="token keyword">...</span>
+  We need to ensure these tokens inherit the parent diff line's background.
+*/
+
+.repos-line-content.added span.token,
+.repos-line-content.removed span.token {
+    /*
+     If Prism theme has a background for tokens, you might need to override it here.
+     Or, ensure Prism theme tokens have transparent backgrounds.
+     Often, this is handled by Prism themes if their main pre/code background is transparent.
+    */
+}
+
+/* Adjust font size/family if needed to match ADO's diff viewer */
+.repos-diff-contents-row code[class*="language-"],
+.repos-diff-contents-row pre[class*="language-"] {
+    font-family: "Consolas", "Monaco", "Andale Mono", "Ubuntu Mono", monospace; /* Match ADO */
+    font-size: 12px; /* Match ADO or user preference */
+    line-height: 1.5;
+    white-space: pre-wrap !important; /* ADO might use this */
+    word-wrap: break-word !important; /* ADO might use this */
+    direction: ltr;
+    text-align: left;
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+    -ms-hyphens: none;
+    hyphens: none;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Marker class to prevent re-highlighting */
+.ado-syntax-highlighted {
+    /* No specific style needed, just a marker */
+}

@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Azure DevOps PR Syntax Highlighter",
+  "version": "0.1.0",
+  "description": "Adds syntax highlighting to file diffs in Azure DevOps Pull Requests.",
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.dev.azure.com/*",
+    "*://*.visualstudio.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.dev.azure.com/*/_git/*/pullrequest/*?_a=files*"],
+      "js": ["prism/prism.js", "content_script.js"],
+      "css": ["prism/prism.css", "custom_styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["prism/components/*.min.js"],
+      "matches": ["*://*.dev.azure.com/*", "*://*.visualstudio.com/*"]
+    }
+  ]
+}
+
+
