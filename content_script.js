@@ -68,7 +68,7 @@ function processFileDiff(fileDiffElement) {
 
     // 2. Find all code lines within this file diff
     // For summary cards:
-    let codeLineElements = fileDiffElement.querySelectorAll('.repos-summary-diff-blocks .repos-line-content');
+    let codeLineElements = fileDiffElement.querySelectorAll('.repos-line-content');
 
     codeLineElements.forEach(lineElement => {
         // Delete the screen-reader-only span first
