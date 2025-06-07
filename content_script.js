@@ -114,30 +114,39 @@ function processFileDiff(fileDiffElement) {
 
                 // For now, let's try direct highlight on lineElement if no children.
                 // If it has children, it's more complex.
-                    // Handle lines with existing spans (e.g., inline diffs)
-                    // This part is complex. We need to get the text of each segment,
-                    // highlight it, and then reconstruct.
-                    // For now, we'll mark it as highlighted to avoid reprocessing, but skip deep highlighting.
-                    // A more advanced solution would be needed here.
-                    let combinedText = '';
-                    Array.from(lineElement.childNodes).forEach(child => {
-                        if (child.nodeType === Node.TEXT_NODE) {
-                            combinedText += child.textContent;
-                        } else if (child.nodeType === Node.ELEMENT_NODE) {
-                            combinedText += child.textContent; // Or process recursively
-                        }
-                    });
-
-                    if (combinedText.trim()) {
-                        const code = document.createElement('code'); // Temporary element
-                        code.className = `language-${language}`;
-                        code.textContent = combinedText;
-                        Prism.highlightElement(code, false, () => {
-                            lineElement.innerHTML = code.innerHTML; // Replace entire line content
-                            lineElement.classList.add('ado-syntax-highlighted');
-                            lineElement.classList.add(`language-${language}`);
-                        });
+                // Handle lines with existing spans (e.g., inline diffs)
+                // This part is complex. We need to get the text of each segment,
+                // highlight it, and then reconstruct.
+                // For now, we'll mark it as highlighted to avoid reprocessing, but skip deep highlighting.
+                // A more advanced solution would be needed here.
+                let combinedText = '';
+                Array.from(lineElement.childNodes).forEach(child => {
+                    if (child.nodeType === Node.TEXT_NODE) {
+                        combinedText += child.textContent;
+                    } else if (child.nodeType === Node.ELEMENT_NODE) {
+                        combinedText += child.textContent; // Or process recursively
                     }
+                });
+            
+                if (combinedText.trim()) {
+                    const code = document.createElement('code'); // Temporary element
+                    code.className = `language-${language}`;
+                    code.textContent = combinedText;
+                    Prism.highlightElement(code, false, () => {
+                        // Create new highlighted line
+                        const highlightedLine = lineElement.cloneNode(true);
+                        highlightedLine.innerHTML = code.innerHTML;
+                        highlightedLine.classList.add('ado-syntax-highlighted');
+                        highlightedLine.classList.add(`language-${language}`);
+                        
+                        // Hide the original line.
+                        // This is a hack to make the line comment button (and maybe other functionality) be functional. Otherwise it breaks.
+                        lineElement.style.display = 'none';
+                        
+                        // Insert the highlighted version after the original
+                        lineElement.parentNode.insertBefore(highlightedLine, lineElement.nextSibling);
+                    });
+                }
             }
         }
     });
