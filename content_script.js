@@ -33,64 +33,6 @@ function getLanguageFromFileName(fileName) {
     const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
     return languageMap[extension] || null; // Default to null (no highlighting) if unknown
 }
-/* 
-function highlightElement(element, language) {
-    if (!element || !language || !Prism.languages[language] || element.classList.contains('ado-syntax-highlighted')) {
-        return;
-    }
-
-    // Skip empty lines or lines with only whitespace
-    if (!element.textContent.trim()) return;
-
-    // Find the actual code content (text after screen-reader and line-icon spans)
-    const screenReaderOnly = element.querySelector('.screen-reader-only');
-    const lineIcon = element.querySelector('.line-icon');
-    
-    // Get the text content that comes after these elements
-    let codeContent = '';
-    let foundContent = false;
-    Array.from(element.childNodes).forEach(node => {
-        if (node === screenReaderOnly || node === lineIcon) {
-            foundContent = true;
-        } else if (foundContent && node.nodeType === Node.TEXT_NODE) {
-            codeContent += node.textContent;
-        }
-    });
-
-    if (!codeContent.trim()) return;
-
-    // Create a temporary structure for Prism to work on
-    const pre = document.createElement('pre');
-    const code = document.createElement('code');
-    code.className = `language-${language}`;
-    code.textContent = codeContent;
-    pre.appendChild(code);
-
-    Prism.highlightElement(code, false, () => {
-        // Get the highlighted HTML
-        const highlightedHtml = code.innerHTML;
-        
-        // Create a new container for the highlighted content
-        const highlightedContent = document.createElement('span');
-        highlightedContent.innerHTML = highlightedHtml;
-        
-        // Clear the element and rebuild it with preserved structure
-        element.innerHTML = '';
-        
-        // Add back only the line icon if it exists
-        if (lineIcon) {
-            element.appendChild(lineIcon.cloneNode(true));
-        }
-        
-        // Add the highlighted content
-        element.appendChild(highlightedContent);
-        
-        // Mark as highlighted
-        element.classList.add('ado-syntax-highlighted');
-        element.classList.add(`language-${language}`);
-    });
-}
- */
 
 function processFileDiff(fileDiffElement) {
     // 1. Determine the file name and language
@@ -196,7 +138,6 @@ function processFileDiff(fileDiffElement) {
                             lineElement.classList.add(`language-${language}`);
                         });
                     }
-                // }
             }
         }
     });
