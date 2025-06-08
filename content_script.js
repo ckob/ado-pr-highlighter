@@ -52,11 +52,6 @@ function processFileDiff(fileDiffElement) {
     let codeLineElements = fileDiffElement.querySelectorAll('.repos-line-content');
 
     codeLineElements.forEach(lineElement => {
-        // TODO: TMP, instead of deleing it we should add it before the highlighted content
-        // const spanToDelete = lineElement.querySelector("span.screen-reader-only");
-        // if (spanToDelete) {
-        //     spanToDelete.remove();
-        // }
 
         // We need to be careful. ADO sometimes has spans INSIDE repos-line-content for
         // inline diff highlighting (e.g. <span class="added-content">).
@@ -69,94 +64,58 @@ function processFileDiff(fileDiffElement) {
 
         // Simple approach:
         if (!lineElement.classList.contains('ado-syntax-highlighted')) {
-            // We need to preserve the original structure if there are `added-content` or `removed-content` spans.
-            // Let's iterate child nodes. If a child is a text node, wrap it and highlight.
-            // If it's an element (like `added-content`), recurse or highlight its text.
-
-            // This is a simplified approach, may need refinement for complex inline diffs
-            const textNodesToHighlight = [];
-            const walker = document.createTreeWalker(lineElement, NodeFilter.SHOW_TEXT, null, false);
-            let node;
-            while(node = walker.nextNode()) {
-                if (node.nodeValue.trim() !== '') {
-                    if (node.parentElement.classList.contains('screen-reader-only')) {
-                        continue;
-                    }
-                     // Check if parent is already a token (Prism might have run)
-                    if (!node.parentElement.classList.contains('token')) {
-                        textNodesToHighlight.push(node);
-                    }
+            let combinedText = '';
+            Array.from(lineElement.childNodes).forEach(child => {
+                // Skip screen-reader-only spans
+                if (child.nodeType === Node.ELEMENT_NODE && child.classList.contains('screen-reader-only')) {
+                    return;
                 }
-            }
-            // TODO: Remove all this textNodesToHighlight stuff. We are already iterating next
-            
-            if (textNodesToHighlight.length > 0) {
-                // Wrap text nodes in spans so Prism can target them, then highlight
-                // This is still tricky because Prism will replace the innerHTML.
-                // A robust way is to take the full textContent of lineElement,
-                // highlight it, then carefully replace, trying to preserve existing
-                // ADO spans for +/-.
-
-                // For now, let's try direct highlight on lineElement if no children.
-                // If it has children, it's more complex.
-                // Handle lines with existing spans (e.g., inline diffs)
-                // This part is complex. We need to get the text of each segment,
-                // highlight it, and then reconstruct.
-                // For now, we'll mark it as highlighted to avoid reprocessing, but skip deep highlighting.
-                // A more advanced solution would be needed here.
-                let combinedText = '';
-                Array.from(lineElement.childNodes).forEach(child => {
-                    // Skip screen-reader-only spans
-                    if (child.nodeType === Node.ELEMENT_NODE && child.classList.contains('screen-reader-only')) {
-                        return;
+                
+                if (child.nodeType === Node.TEXT_NODE) {
+                    combinedText += child.textContent;
+                } else if (child.nodeType === Node.ELEMENT_NODE) {
+                    combinedText += child.textContent; // Or process recursively
+                }
+            });
+        
+            if (combinedText.trim()) {
+                const code = document.createElement('code'); // Temporary element
+                code.className = `language-${language}`;
+                code.textContent = combinedText;
+                Prism.highlightElement(code, false, () => {
+                    // Create new highlighted line
+                    const highlightedLine = lineElement.cloneNode(true);
+                    
+                    // Preserve the important spans from the original
+                    const screenReaderSpan = lineElement.querySelector('.screen-reader-only');
+                    const ariaHiddenSpan = lineElement.querySelector('[aria-hidden="true"]');
+                    
+                    // Clear the content but keep the structure
+                    highlightedLine.innerHTML = '';
+                    
+                    // Add spans in the correct order
+                    if (screenReaderSpan) {
+                        highlightedLine.appendChild(screenReaderSpan.cloneNode(true));
+                    }
+                    if (ariaHiddenSpan) {
+                        highlightedLine.appendChild(ariaHiddenSpan.cloneNode(true));
                     }
                     
-                    if (child.nodeType === Node.TEXT_NODE) {
-                        combinedText += child.textContent;
-                    } else if (child.nodeType === Node.ELEMENT_NODE) {
-                        combinedText += child.textContent; // Or process recursively
-                    }
+                    // Add the highlighted content last
+                    const contentDiv = document.createElement('div');
+                    contentDiv.innerHTML = code.innerHTML;
+                    highlightedLine.appendChild(contentDiv);
+                    
+                    highlightedLine.classList.add('ado-syntax-highlighted');
+                    highlightedLine.classList.add(`language-${language}`);
+                    
+                    // Hide the original line.
+                    // This is a hack to make the line comment button (and maybe other functionality) be functional. Otherwise it breaks.
+                    lineElement.style.display = 'none';
+                    
+                    // Insert the highlighted version after the original
+                    lineElement.parentNode.insertBefore(highlightedLine, lineElement.nextSibling);
                 });
-            
-                if (combinedText.trim()) {
-                    const code = document.createElement('code'); // Temporary element
-                    code.className = `language-${language}`;
-                    code.textContent = combinedText;
-                    Prism.highlightElement(code, false, () => {
-                        // Create new highlighted line
-                        const highlightedLine = lineElement.cloneNode(true);
-                        
-                        // Preserve the important spans from the original
-                        const screenReaderSpan = lineElement.querySelector('.screen-reader-only');
-                        const ariaHiddenSpan = lineElement.querySelector('[aria-hidden="true"]');
-                        
-                        // Clear the content but keep the structure
-                        highlightedLine.innerHTML = '';
-                        
-                        // Add spans in the correct order
-                        if (screenReaderSpan) {
-                            highlightedLine.appendChild(screenReaderSpan.cloneNode(true));
-                        }
-                        if (ariaHiddenSpan) {
-                            highlightedLine.appendChild(ariaHiddenSpan.cloneNode(true));
-                        }
-                        
-                        // Add the highlighted content last
-                        const contentDiv = document.createElement('div');
-                        contentDiv.innerHTML = code.innerHTML;
-                        highlightedLine.appendChild(contentDiv);
-                        
-                        highlightedLine.classList.add('ado-syntax-highlighted');
-                        highlightedLine.classList.add(`language-${language}`);
-                        
-                        // Hide the original line.
-                        // This is a hack to make the line comment button (and maybe other functionality) be functional. Otherwise it breaks.
-                        lineElement.style.display = 'none';
-                        
-                        // Insert the highlighted version after the original
-                        lineElement.parentNode.insertBefore(highlightedLine, lineElement.nextSibling);
-                    });
-                }
             }
         }
     });
@@ -164,7 +123,7 @@ function processFileDiff(fileDiffElement) {
 
 function applySyntaxHighlighting() {
     console.log("ADO Syntax Highlighter: Applying...");
-    
+
     const fileDiffPanels = document.querySelectorAll('.repos-summary-header');
     fileDiffPanels.forEach(fileDiffPanel => {
         processFileDiff(fileDiffPanel);
