@@ -1,37 +1,30 @@
-// Helper to map file extensions to Prism language aliases
-const languageMap = {
-    '.js': 'javascript',
-    '.jsx': 'jsx',
-    '.ts': 'typescript',
-    '.tsx': 'tsx',
-    '.py': 'python',
-    '.java': 'java',
-    '.cs': 'csharp', // Prism uses 'clike' for C-like, but 'csharp' is often an alias or separate component
-    '.c': 'clike',
-    '.cpp': 'clike',
-    '.h': 'clike',
-    '.html': 'markup', // 'markup' is Prism's term for HTML/XML/SVG
-    '.xml': 'markup',
-    '.svg': 'markup',
-    '.css': 'css',
-    '.scss': 'scss',
-    '.less': 'less',
-    '.json': 'json',
-    '.yaml': 'yaml',
-    '.yml': 'yaml',
-    '.md': 'markdown',
-    '.sh': 'bash',
-    '.ps1': 'powershell',
-    '.sql': 'sql',
-    '.csproj': 'markup', // Or a more specific XML if Prism has it
-    '.sln': 'solution', // You might need a custom grammar or treat as plain
-    // Add more mappings as needed
+// Helper to map file extensions to Prism language aliases https://prismjs.com/#supported-languages
+const filePatternToLanguage = {
+    '*.csproj': 'markup',
+    'directory.build.props': 'markup',
+    'directory.build.targets': 'markup',
+    'directory.packages.props': 'markup',
+    'nuget.config': 'markup',
 };
 
 function getLanguageFromFileName(fileName) {
     if (!fileName) return null;
-    const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
-    return languageMap[extension] || null; // Default to null (no highlighting) if unknown
+    const lowerFileName = fileName.toLowerCase();
+    
+    for (const [pattern, value] of Object.entries(filePatternToLanguage)) {
+        const regexPattern = pattern
+            .replace(/\./g, '\\.')
+            .replace(/\*/g, '.*');
+        const regex = new RegExp(`^${regexPattern}$`);
+        
+        if (regex.test(lowerFileName)) {
+            return value;
+        }
+    }
+    
+    // If no match found, return just the extension without the dot
+    const extension = lowerFileName.substring(lowerFileName.lastIndexOf('.') + 1);
+    return extension || null;
 }
 
 function processFileDiff(fileDiffElement) {
