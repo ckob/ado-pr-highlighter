@@ -103,7 +103,7 @@ function processFileDiff(fileDiffElement) {
                     highlightedLine.classList.add(`language-${language}`);
                     
                     // Hide the original line.
-                    // This is a hack to make the line comment button (and maybe other functionality) be functional. Otherwise it breaks.
+                    // This is a hack to make the line comment button (and maybe other functionality) functional. Otherwise it breaks.
                     lineElement.style.display = 'none';
                     
                     // Insert the highlighted version after the original
@@ -136,11 +136,12 @@ function debounce(func, wait) {
     };
 }
 
-const debouncedApplyHighlighting = debounce(applySyntaxHighlighting, 500);
 
 console.log("ADO Syntax Highlighter: Content script loaded.");
 // Initial run
-debouncedApplyHighlighting();
+applySyntaxHighlighting();
+
+const debouncedApplyHighlighting = debounce(applySyntaxHighlighting, 500);
 
 // Observe DOM changes for dynamically loaded content
 const observer = new MutationObserver((mutationsList, observer) => {
