@@ -39,7 +39,6 @@ function processFileDiff(fileDiffElement) {
     }
     console.log(`Highlighting ${fileName} as ${language}`);
 
-
     // 2. Find all code lines within this file diff
     // For summary cards:
     let codeLineElements = fileDiffElement.querySelectorAll('.repos-line-content');
@@ -115,6 +114,11 @@ function processFileDiff(fileDiffElement) {
 }
 
 function applySyntaxHighlighting() {
+    // Only apply highlighting if we're on a PR page
+    if (!window.location.href.includes('/_git/') || !window.location.href.includes('/pullrequest/')) {
+        return;
+    }
+
     console.log("ADO Syntax Highlighter: Applying...");
 
     const fileDiffPanels = document.querySelectorAll('.repos-summary-header');
@@ -136,12 +140,22 @@ function debounce(func, wait) {
     };
 }
 
-
 console.log("ADO Syntax Highlighter: Content script loaded.");
+
 // Initial run
 applySyntaxHighlighting();
 
 const debouncedApplyHighlighting = debounce(applySyntaxHighlighting, 500);
+
+// Listen for URL changes
+let lastUrl = location.href;
+new MutationObserver(() => {
+    const currentUrl = location.href;
+    if (currentUrl !== lastUrl) {
+        lastUrl = currentUrl;
+        debouncedApplyHighlighting();
+    }
+}).observe(document, { subtree: true, childList: true });
 
 // Observe DOM changes for dynamically loaded content
 const observer = new MutationObserver((mutationsList, observer) => {
