@@ -35,26 +35,7 @@ function getLanguageFromFileName(fileName) {
 }
 
 function processFileDiff(fileDiffElement) {
-    // 1. Determine the file name and language
-    // The file name is in a structure like:
-    // <div class="flex flex-center body-m font-weight-semibold text-ellipsis" role="heading" aria-level="3">
-    //   <span class="text-ellipsis">Program.cs</span>
-    // </div>
-    // This might be in `repos-summary-header` or a similar structure for the full file view
-    let fileNameElement = fileDiffElement.querySelector('.repos-change-summary-file-icon-container + .flex-column .text-ellipsis'); // For summary cards
-    if (!fileNameElement) {
-        // Try to find filename in the main diff view (selector might need adjustment)
-        // This is a guess for the main diff view title when a file is selected:
-        fileNameElement = document.querySelector('.vc-sparse-files-tree-selected-item .file-path-text');
-        if (!fileNameElement) {
-             // A more generic selector for the currently viewed file's header
-            const headerTitle = document.querySelector('.repos-pr-iteration-file-header .bolt-header-title');
-            if (headerTitle) {
-                fileNameElement = headerTitle.querySelector('.text-ellipsis'); // Often the filename is in such a span
-            }
-        }
-    }
-
+    let fileNameElement = fileDiffElement.querySelector('.repos-change-summary-file-icon-container + .flex-column .text-ellipsis');
 
     const fileName = fileNameElement ? fileNameElement.textContent.trim() : null;
     const language = getLanguageFromFileName(fileName);
@@ -71,11 +52,11 @@ function processFileDiff(fileDiffElement) {
     let codeLineElements = fileDiffElement.querySelectorAll('.repos-line-content');
 
     codeLineElements.forEach(lineElement => {
-        // Delete the screen-reader-only span first
-        const spanToDelete = lineElement.querySelector("span.screen-reader-only");
-        if (spanToDelete) {
-            spanToDelete.remove();
-        }
+        // TODO: TMP, instead of deleing it we should add it before the highlighted content
+        // const spanToDelete = lineElement.querySelector("span.screen-reader-only");
+        // if (spanToDelete) {
+        //     spanToDelete.remove();
+        // }
 
         // We need to be careful. ADO sometimes has spans INSIDE repos-line-content for
         // inline diff highlighting (e.g. <span class="added-content">).
@@ -98,13 +79,17 @@ function processFileDiff(fileDiffElement) {
             let node;
             while(node = walker.nextNode()) {
                 if (node.nodeValue.trim() !== '') {
+                    if (node.parentElement.classList.contains('screen-reader-only')) {
+                        continue;
+                    }
                      // Check if parent is already a token (Prism might have run)
                     if (!node.parentElement.classList.contains('token')) {
                         textNodesToHighlight.push(node);
                     }
                 }
             }
-
+            // TODO: Remove all this textNodesToHighlight stuff. We are already iterating next
+            
             if (textNodesToHighlight.length > 0) {
                 // Wrap text nodes in spans so Prism can target them, then highlight
                 // This is still tricky because Prism will replace the innerHTML.
@@ -121,6 +106,11 @@ function processFileDiff(fileDiffElement) {
                 // A more advanced solution would be needed here.
                 let combinedText = '';
                 Array.from(lineElement.childNodes).forEach(child => {
+                    // Skip screen-reader-only spans
+                    if (child.nodeType === Node.ELEMENT_NODE && child.classList.contains('screen-reader-only')) {
+                        return;
+                    }
+                    
                     if (child.nodeType === Node.TEXT_NODE) {
                         combinedText += child.textContent;
                     } else if (child.nodeType === Node.ELEMENT_NODE) {
@@ -135,7 +125,27 @@ function processFileDiff(fileDiffElement) {
                     Prism.highlightElement(code, false, () => {
                         // Create new highlighted line
                         const highlightedLine = lineElement.cloneNode(true);
-                        highlightedLine.innerHTML = code.innerHTML;
+                        
+                        // Preserve the important spans from the original
+                        const screenReaderSpan = lineElement.querySelector('.screen-reader-only');
+                        const ariaHiddenSpan = lineElement.querySelector('[aria-hidden="true"]');
+                        
+                        // Clear the content but keep the structure
+                        highlightedLine.innerHTML = '';
+                        
+                        // Add spans in the correct order
+                        if (screenReaderSpan) {
+                            highlightedLine.appendChild(screenReaderSpan.cloneNode(true));
+                        }
+                        if (ariaHiddenSpan) {
+                            highlightedLine.appendChild(ariaHiddenSpan.cloneNode(true));
+                        }
+                        
+                        // Add the highlighted content last
+                        const contentDiv = document.createElement('div');
+                        contentDiv.innerHTML = code.innerHTML;
+                        highlightedLine.appendChild(contentDiv);
+                        
                         highlightedLine.classList.add('ado-syntax-highlighted');
                         highlightedLine.classList.add(`language-${language}`);
                         
@@ -154,25 +164,11 @@ function processFileDiff(fileDiffElement) {
 
 function applySyntaxHighlighting() {
     console.log("ADO Syntax Highlighter: Applying...");
-      
-    // Target summary cards on the "Files" overview
-    const summaryDiffs = document.querySelectorAll('.repos-summary-code-diff');
-    summaryDiffs.forEach(summaryDiff => {
-        // The fileDiffElement for summary is the parent '.bolt-card'
-        const fileCard = summaryDiff.closest('.bolt-card');
-        if (fileCard && !fileCard.dataset.syntaxProcessed) {
-            processFileDiff(fileCard);
-            fileCard.dataset.syntaxProcessed = "true";
-        }
+    
+    const fileDiffPanels = document.querySelectorAll('.repos-summary-header');
+    fileDiffPanels.forEach(fileDiffPanel => {
+        processFileDiff(fileDiffPanel);
     });
-
-    // Target the main diff viewer when a file is selected
-    // Common container class names can be '.vc-diff-viewer', '.diff-frame', '.file-content-viewer'
-    const mainDiffViewer = document.querySelector('.vc-diff-viewer, .diff-frame, .page-content .repos-changes-viewer > .flex-row'); // This last one is a bit broad, might need refinement
-    if (mainDiffViewer && !mainDiffViewer.dataset.syntaxProcessed) {
-        processFileDiff(mainDiffViewer); // mainDiffViewer itself might contain the filename header
-        mainDiffViewer.dataset.syntaxProcessed = "true"; // Mark the whole viewer as processed once. Lines will be marked individually.
-    }
 }
 
 // Debounce function
