@@ -102,7 +102,7 @@ function processFileDiff(fileDiffElement) {
                     highlightedLine.classList.add(`language-${language}`);
                     
                     // Hide the original line.
-                    // This is a hack to make the line comment button (and maybe other functionality) functional. Otherwise it breaks.
+                    // This is a hack to make the line comment button functional (and maybe others). Otherwise it breaks.
                     lineElement.style.display = 'none';
                     
                     // Insert the highlighted version after the original
@@ -127,7 +127,11 @@ function applySyntaxHighlighting() {
     });
 }
 
-// Debounce function
+console.log("ADO Syntax Highlighter: Content script loaded.");
+
+// Initial run
+applySyntaxHighlighting();
+
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -139,38 +143,22 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
-
-console.log("ADO Syntax Highlighter: Content script loaded.");
-
-// Initial run
-applySyntaxHighlighting();
-
 const debouncedApplyHighlighting = debounce(applySyntaxHighlighting, 500);
 
 // Listen for URL changes
-let lastUrl = location.href;
-new MutationObserver(() => {
-    const currentUrl = location.href;
-    if (currentUrl !== lastUrl) {
-        lastUrl = currentUrl;
-        debouncedApplyHighlighting();
-    }
-}).observe(document, { subtree: true, childList: true });
+window.addEventListener('popstate', debouncedApplyHighlighting);
 
 // Observe DOM changes for dynamically loaded content
-const observer = new MutationObserver((mutationsList, observer) => {
-    // Check if relevant nodes were added (e.g., diff rows, file containers)
+new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
         if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-            // A simple check: if a lot of 'repos-diff-contents-row' or 'bolt-card' got added.
-            // Or if the main diff viewer content changed.
             let needsHighlighting = false;
             mutation.addedNodes.forEach(node => {
                 if (node.nodeType === Node.ELEMENT_NODE) {
-                    if (node.matches && (node.matches('.repos-summary-code-diff, .vc-diff-viewer, .diff-frame, .repos-diff-contents-row, .bolt-card, .repos-pr-iteration-file-header'))) {
+                    if (node.matches?.('.repos-summary-code-diff, .vc-diff-viewer, .diff-frame, .repos-diff-contents-row, .bolt-card, .repos-pr-iteration-file-header')) {
                         needsHighlighting = true;
                     }
-                    if (node.querySelector && node.querySelector('.repos-summary-code-diff, .vc-diff-viewer, .diff-frame, .repos-diff-contents-row, .bolt-card, .repos-pr-iteration-file-header')) {
+                    if (node.querySelector?.('.repos-summary-code-diff, .vc-diff-viewer, .diff-frame, .repos-diff-contents-row, .bolt-card, .repos-pr-iteration-file-header')) {
                         needsHighlighting = true;
                     }
                 }
@@ -178,14 +166,8 @@ const observer = new MutationObserver((mutationsList, observer) => {
 
             if (needsHighlighting) {
                 debouncedApplyHighlighting();
-                break; // No need to check other mutations if one already triggered
+                break;
             }
         }
     }
-});
-
-// Start observing the document body for configured mutations
-observer.observe(document.body, { childList: true, subtree: true });
-
-// (optional) listen for messages from a popup for theme changes, etc.
-// chrome.runtime.onMessage.addListener(...)
+}).observe(document.body, { childList: true, subtree: true });
