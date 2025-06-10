@@ -26,17 +26,40 @@ function getLanguageFromFileName(fileName) {
     return extension || null;
 }
 
+let theme = "";
+function getTheme(element) {
+    if (theme) return theme;
+    const color = window.getComputedStyle(element).color;
+
+    // Extract RGB components
+    const rgb = color.match(/\d+/g).map(Number);
+    let [r, g, b] = rgb;
+  
+    // Convert to relative luminance (sRGB)
+    [r, g, b] = [r, g, b].map((c) => {
+      c /= 255;
+      return c <= 0.03928
+        ? c / 12.92
+        : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+  
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+    theme = luminance > 0.5 ? 'prismjs-tomorrow-night' : 'prism-one-light';
+    return theme;
+}
+
 function processFileDiff(fileDiffElement) {
     let fileNameElement = fileDiffElement.querySelector('.repos-change-summary-file-icon-container + .flex-column .text-ellipsis');
 
     const fileName = fileNameElement ? fileNameElement.textContent.trim() : null;
     const language = getLanguageFromFileName(fileName);
 
-    let codeLineElements = fileDiffElement.querySelectorAll('.repos-line-content');
+    let originalLineElements = fileDiffElement.querySelectorAll('.monospaced-text > .repos-line-content');
 
-    codeLineElements.forEach(lineElement => {
-        if (!lineElement.classList.contains('ado-syntax-highlighted')) {
-            const highlightedLine = lineElement.cloneNode(true);
+    originalLineElements.forEach(originalLineElement => {
+        if (!originalLineElement.classList.contains('ado-syntax-highlighted')) {
+            const highlightedLine = originalLineElement.cloneNode(true);
 
             const code = document.createElement('code'); // Temporary element
             code.className = `language-${language}`;
@@ -44,16 +67,17 @@ function processFileDiff(fileDiffElement) {
             Prism.highlightElement(code, false, () => {
                 const contentDiv = document.createElement('div');
                 contentDiv.innerHTML = code.innerHTML;
+                contentDiv.classList.add(getTheme(originalLineElement));
                 highlightedLine.innerHTML = '';
                 highlightedLine.appendChild(contentDiv);
                 highlightedLine.classList.add('ado-syntax-highlighted');
 
                 // Hide the original line.
-                // This is a hack to make the line comment button functional (and maybe others). Otherwise it breaks.
-                lineElement.style.display = 'none';
+                // This is a hack to make the line comment button functional. Otherwise it breaks.
+                originalLineElement.style.display = 'none';
                 
                 // Insert the highlighted version after the original
-                lineElement.parentNode.insertBefore(highlightedLine, lineElement.nextSibling) 
+                originalLineElement.parentNode.insertBefore(highlightedLine, originalLineElement.nextSibling) 
             });
         }
     });
