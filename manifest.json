@@ -1,13 +1,14 @@
 {
+  "$schema": "https://json.schemastore.org/chrome-manifest",
   "manifest_version": 3,
   "name": "Azure DevOps PR Syntax Highlighter",
   "version": "0.1.0",
   "description": "Adds syntax highlighting to partial file diffs in Azure DevOps Pull Requests.",
   "icons": {
-    "16": "icons/icon16.png",
-    "32": "icons/icon32.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
   },
   "host_permissions": [
     "*://*.dev.azure.com/*",
