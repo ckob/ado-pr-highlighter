@@ -1,10 +1,11 @@
 // Helper to map file extensions to Prism language aliases https://prismjs.com/#supported-languages
 const filePatternToLanguage = {
-    '*.csproj': 'markup',
-    'directory.build.props': 'markup',
-    'directory.build.targets': 'markup',
-    'directory.packages.props': 'markup',
-    'nuget.config': 'markup',
+  '*.csproj': 'markup',
+  'directory.build.props': 'markup',
+  'directory.build.targets': 'markup',
+  'directory.packages.props': 'markup',
+  'nuget.config': 'markup',
+  '*.feature': 'gherkin'
 };
 
 function getLanguageFromFileName(fileName) {
