@@ -105,12 +105,11 @@ function processFileDiff(fileDiffElement) {
 }
 
 function applySyntaxHighlighting() {
-  // Only apply highlighting if we're on a PR page
-  if (!window.location.href.includes('/_git/') || !window.location.href.includes('/pullrequest/')) {
+  if (!window.location.href.includes('/_git/')) {
     return;
   }
 
-  console.log("ADO Syntax Highlighter: Applying...");
+  console.debug("ADO Syntax Highlighter: Applying...");
 
   const fileDiffPanels = document.querySelectorAll('.repos-summary-header');
   fileDiffPanels.forEach(fileDiffPanel => {
@@ -118,7 +117,7 @@ function applySyntaxHighlighting() {
   });
 }
 
-console.log("ADO Syntax Highlighter: Content script loaded.");
+console.debug("ADO Syntax Highlighter: Content script loaded.");
 
 // Initial run
 applySyntaxHighlighting();
