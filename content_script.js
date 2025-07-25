@@ -6,7 +6,7 @@ const filePatternToLanguage = {
   'directory.packages.props': 'markup',
   'nuget.config': 'markup',
   '*.feature': 'gherkin',
-  '*.cls': 'apex'
+  '*.(cls|trigger)': 'apex'
 };
 
 function getLanguageFromFileName(fileName) {
