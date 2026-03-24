@@ -1,0 +1,11 @@
+/*
+ * Overrides for Monaco editor views (diff and non-diff).
+ *
+ * CSS-only approach: we apply inline color styles to Monaco's existing
+ * mtk* spans instead of replacing the DOM. This preserves Monaco's
+ * hit-testing (className check, CharacterMapping, caretRangeFromPoint).
+ *
+ * The Prism theme CSS (scoped under .prism-one-light / .prism-tomorrow-night)
+ * is only used to resolve colors via getComputedStyle in JS — it never
+ * targets Monaco's DOM directly. No extra classes are added to .view-line.
+ */
