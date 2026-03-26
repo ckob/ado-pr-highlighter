@@ -205,7 +205,7 @@ function flattenPrismTokenStream(tokens) {
  *
  * Structure: Map<themeClass, Map<classListKey, string|null>>
  *
- * We create a hidden element with the theme class and probe computed colors
+ * Create a hidden element with the theme class and probe computed colors
  * for each unique set of Prism token classes. This is cached so each unique
  * token class combination is resolved at most once per theme per page load.
  */
@@ -322,7 +322,7 @@ function processMonacoViewLines(viewLinesElement, language, themeClass) {
     }
 
     // 1. Extract plain text from the line for Prism tokenization.
-    // We need to map character positions between Monaco spans and Prism tokens.
+    // Map character positions between Monaco spans and Prism tokens.
     // Build an array of { node, startOffset, length } for each Monaco child span.
     const monacoSpans = [];
     let totalLength = 0;
@@ -375,7 +375,7 @@ function processMonacoViewLines(viewLinesElement, language, themeClass) {
 
     // 4. For each Monaco span, find the Prism color that covers it.
     // If a Monaco span straddles multiple Prism tokens with different colors,
-    // we use the color at the start of the span (the dominant visual token).
+    // use the color at the start of the span (the dominant visual token).
     // This is a pragmatic trade-off: splitting spans would break CharacterMapping.
     let tokenIdx = 0;
     for (const ms of monacoSpans) {
