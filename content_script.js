@@ -293,7 +293,7 @@ function getMonacoLineFingerprint(viewLineElement) {
  * is called repeatedly as the user scrolls.
  *
  * CSS-only approach: instead of replacing Monaco's DOM (which breaks mouse
- * hit-testing due to `className` checks and stale `CharacterMapping`), we:
+ * hit-testing due to `className` checks and stale `CharacterMapping`):
  * 1. Extract the line's plain text
  * 2. Tokenize with `Prism.tokenize()` to get token types + character ranges
  * 3. Walk Monaco's existing mtk* spans and apply inline color styles
