@@ -1,0 +1,134 @@
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #cad3f5;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #1e2030;
+}
+
+/* https://prismjs.com/tokens.html */
+
+.token.keyword {
+	color: #c6a0f6;
+}
+
+.token.builtin {
+	color: #ed8796;
+}
+
+.token.class-name {
+	color: #eed49f;
+}
+
+.token.function {
+	color: #8aadf4;
+}
+
+.token.boolean,
+.token.number {
+	color: #f5a97f;
+}
+
+.token.string,
+.token.char {
+	color: #a6da95;
+}
+
+.token.symbol {
+	color: #eed49f;
+}
+
+.token.regex {
+	color: #f5bde6;
+}
+
+.token.url {
+	color: #a6da95;
+}
+
+.token.operator {
+	color: #91d7e3;
+}
+
+.token.variable {
+	color: #cad3f5;
+}
+
+.token.constant {
+	color: #f5a97f;
+}
+
+.token.property {
+	color: #8aadf4;
+}
+
+.token.punctuation {
+	color: #939ab7;
+}
+
+.token.important {
+	color: #c6a0f6;
+}
+
+.token.comment {
+	color: #939ab7;
+}
+
+.token.tag {
+	color: #8aadf4;
+}
+
+.token.attr-name {
+	color: #eed49f;
+}
+
+.token.attr-value {
+	color: #a6da95;
+}
+
+.token.namespace {
+	color: #eed49f;
+}
+
+.token.prolog,
+.token.doctype {
+	color: #c6a0f6;
+}
+
+.token.cdata {
+	color: #8bd5ca;
+}
+
+.token.entity {
+	color: #ed8796;
+}
+
+.token.atrule {
+	color: #c6a0f6;
+}
+
+.token.selector {
+	color: #8aadf4;
+}
+
+/* Diff */
+
+.token.deleted {
+	color: #ed8796;
+}
+
+.token.inserted {
+	color: #a6da95
+}
+
+/* Other */
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
