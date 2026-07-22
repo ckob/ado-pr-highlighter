@@ -136,17 +136,23 @@ function processFileDiff(fileDiffElement) {
   });
 }
 
+const ADO_SH_TIMING = true; // set to false to silence perf logging
+
 function applySyntaxHighlighting() {
   if (!window.location.href.includes('/_git/')) {
     return;
   }
 
-  console.debug("ADO Syntax Highlighter: Applying...");
+  const t0 = ADO_SH_TIMING ? performance.now() : 0;
 
   const fileDiffPanels = document.querySelectorAll('.repos-summary-header');
   fileDiffPanels.forEach(fileDiffPanel => {
     processFileDiff(fileDiffPanel);
   });
+
+  if (ADO_SH_TIMING) {
+    console.log(`ADO Syntax Highlighter: highlight pass over ${fileDiffPanels.length} panel(s) took ${(performance.now() - t0).toFixed(2)}ms`);
+  }
 }
 
 console.debug("ADO Syntax Highlighter: Content script loaded.");
@@ -156,21 +162,32 @@ loadSettings().then(() => {
   applySyntaxHighlighting();
 });
 
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
+// Coalesce rapid DOM mutations into a single highlight pass on the next
+// animation frame (~16ms at 60fps) instead of waiting a fixed debounce delay.
+// Bursts of mutations (e.g. Azure DevOps rendering many diff cards at once) are
+// batched into a single render, while latency drops from ~250ms to one frame.
+let rafPending = false;
+let mutationSeenAt = 0;
+function scheduleApplyHighlighting() {
+  if (rafPending) {
+    return;
+  }
+
+  rafPending = true;
+  if (ADO_SH_TIMING) {
+    mutationSeenAt = performance.now();
+  }
+  requestAnimationFrame(() => {
+    rafPending = false;
+    if (ADO_SH_TIMING) {
+      console.log(`ADO Syntax Highlighter: mutation -> frame scheduling delay ${(performance.now() - mutationSeenAt).toFixed(2)}ms`);
+    }
+    applySyntaxHighlighting();
+  });
 }
-const debouncedApplyHighlighting = debounce(applySyntaxHighlighting, 250);
 
 // Listen for URL changes
-window.addEventListener('popstate', debouncedApplyHighlighting);
+window.addEventListener('popstate', scheduleApplyHighlighting);
 
 // Observe DOM changes for dynamically loaded content
 new MutationObserver((mutationsList) => {
@@ -186,7 +203,7 @@ new MutationObserver((mutationsList) => {
         node.matches?.('.repos-summary-code-diff, .vc-diff-viewer, .diff-frame, .repos-diff-contents-row, .bolt-card, .repos-pr-iteration-file-header') ||
         node.querySelector?.('.repos-summary-code-diff, .vc-diff-viewer, .diff-frame, .repos-diff-contents-row, .bolt-card, .repos-pr-iteration-file-header')
       ) {
-        debouncedApplyHighlighting();
+        scheduleApplyHighlighting();
         return;
       }
     }
